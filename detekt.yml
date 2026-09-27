@@ -1,0 +1,85 @@
+build:
+  maxIssues: 0
+  maxRetentionEpochYears: 0
+
+processors:
+  active: true
+  comments:
+    active: true
+  nested-block:
+    active: true
+  size:
+    active: true
+  debug:
+    active: true
+
+processors-comment-overlap:
+  start-in-first-line: true
+
+style:
+  active: true
+  MagicNumber:
+    active: false
+  ReturnCount:
+    max: 4
+  LoopWithTooManyJump:
+    active: true
+  ExplicitItLambda:
+    active: true
+  ExplicitCollectionElementAlias:
+    active: true
+  ExplicitItLambda:
+    active: true
+
+complexity:
+  active: true
+  LongMethod:
+    threshold: 150
+  NestedBlock:
+    max: 5
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+
+naming:
+  active: true
+  ClassNaming:
+    active: true
+  FunctionNaming:
+    active: true
+  VariableNaming:
+    active: true
+
+performance:
+  active: true
+  SpreadOperator:
+    active: true
+
+potentialbugs:
+  active: true
+  ConstantOnLHS:
+    active: false
+  IdenticalDocumentations:
+    active: true
+
+smells:
+  active: true
+  LargeClass:
+    maxLines: 500
+
+comments:
+  active: true
+  KDocReferencesNonExisting:
+    active: true
+
+empty:
+  active: true
+  EmptyFunction:
+    active: true
+
+range:
+  active: true
+  Cols:
+    max: 120

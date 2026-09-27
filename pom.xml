@@ -267,6 +267,29 @@
                 </configuration>
             </plugin>
 
+            <!-- Ktlint — Kotlin code style checker -->
+            <plugin>
+                <groupId>org.jlleitscher</groupId>
+                <artifactId>ktlint-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <executions>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <kotlinSourceDir>src/main/kotlin</kotlinSourceDir>
+                    <testKotlinSourceDir>src/test/kotlin</testKotlinSourceDir>
+                    <includePatterns>
+                        <includePattern>*.kt</includePattern>
+                    </includePatterns>
+                </configuration>
+            </plugin>
+
             <!-- Maven Failsafe for integration tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

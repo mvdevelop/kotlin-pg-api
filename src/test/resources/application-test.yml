@@ -1,0 +1,33 @@
+# ============================================================================
+# Test Configuration
+# ----------------------------------------------------------------------------
+# SECURITY: This config is ONLY for tests — never used in production.
+# Test DB is managed by Testcontainers (randomized per test run).
+# ============================================================================
+
+spring:
+  application:
+    name: kotlin-pg-api-test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Tests create and drop schema each run
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+server:
+  port: 0  # Random port for test isolation
+
+jwt:
+  secret: "dGVzdC1zZWNyZXQta2V5LWZvci10ZXN0aW5nLWFwcHM="
+  expiration: 3600000  # 1 hour for tests
+
+# Test logging — quieter output
+logging:
+  level:
+    com.example.api: WARN
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.testcontainers: WARN
+    org.springframework.test: WARN
