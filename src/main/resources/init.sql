@@ -1,25 +1,16 @@
+-- ============================================================================
+-- Initial Data Seed Script
+-- ----------------------------------------------------------------------------
+-- SECURITY: This script inserts sample product data only.
+-- No users or credentials are auto-created — admin user must be created
+-- manually or via a separate, secured seeding mechanism.
+-- ============================================================================
 
--- Tabela de produtos
-CREATE TABLE IF NOT EXISTS produtos (
-    id BIGSERIAL PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
-    descricao VARCHAR(500) NOT NULL,
-    preco NUMERIC(10,2) NOT NULL,
-    quantidade INTEGER NOT NULL,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Dados iniciais para desenvolvimento
-INSERT INTO produtos (nome, descricao, preco, quantidade) 
-VALUES 
-    ('Notebook Dell Inspiron', 'Notebook Dell Inspiron 15, 16GB RAM, 512GB SSD, Intel Core i7', 4500.00, 10),
-    ('Mouse Logitech MX Master 3', 'Mouse sem fio ergonômico com scroll preciso e múltiplas conexões', 350.00, 50),
-    ('Teclado Mecânico Redragon', 'Teclado mecânico com switches Blue e iluminação RGB personalizável', 280.00, 30),
-    ('Monitor Samsung 24"', 'Monitor LED 24 polegadas Full HD, 75Hz, painel IPS', 899.99, 25),
-    ('Headset Gamer HyperX', 'Headset gamer com som surround 7.1 e microfone removível', 399.99, 40)
+-- Products (sample data)
+INSERT INTO products (name, description, price, quantity) VALUES
+    ('Dell Inspiron Notebook', 'Notebook Dell Inspiron 15, 16GB RAM, 512GB SSD, Intel Core i7', 4500.00, 10),
+    ('Logitech MX Master 3 Mouse', 'Wireless ergonomic mouse with precise scroll and multiple connections', 350.00, 50),
+    ('Redragon Mechanical Keyboard', 'Mechanical keyboard with Blue switches and customizable RGB lighting', 280.00, 30),
+    ('Samsung 24" Monitor', '24-inch LED Full HD monitor, 75Hz, IPS panel', 899.99, 25),
+    ('HyperX Gaming Headset', 'Gaming headset with 7.1 surround sound and detachable microphone', 399.99, 40)
 ON CONFLICT DO NOTHING;
-
--- Índices para melhor performance
-CREATE INDEX IF NOT EXISTS idx_produtos_nome ON produtos(nome);
-CREATE INDEX IF NOT EXISTS idx_produtos_preco ON produtos(preco);

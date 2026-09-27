@@ -1,0 +1,123 @@
+# ============================================================================
+# Docker Compose for Local Development
+# ----------------------------------------------------------------------------
+# SECURITY: This file is for LOCAL development ONLY.
+# For production, use a secrets manager (e.g., Docker Swarm secrets, HashiCorp Vault)
+# and never hardcode credentials in docker-compose.
+#
+# Usage:
+#   1. Create .env file: cp .env.example .env
+#   2. Start services:   docker-compose up
+#   3. Stop services:    docker-compose down -v
+# ============================================================================
+
+name: kotlin-pg-api-dev
+
+services:
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: pg-api-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/schema-postgres.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    environment:
+      POSTGRES_DB: api_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me-in-production}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api-network
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Redis (for distributed rate limiting and caching)
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: pg-api-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-change-me-in-redis}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping", "-a", "${REDIS_PASSWORD:-change-me-in-redis}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api-network
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Application
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kotlin-pg-api
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      # Database configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: api_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-change-me-in-production}
+
+      # JWT configuration (generate with: openssl rand -base64 32)
+      JWT_SECRET: ${JWT_SECRET:-$(openssl rand -base64 32 2>/dev/null || echo 'dev-only-insecure-key-change-me')}
+      JWT_EXPIRATION: 86400000
+
+      # Redis for rate limiting
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+
+      # Application
+      APP_PROFILE: dev
+      PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - api-network
+    restart: unless-stopped
+
+  # ==========================================================================
+  # pgAdmin (optional — for database management)
+  # ==========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pg-api-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-change-me}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - api-network
+    restart: unless-stopped
+
+# ============================================================================
+# Volumes and Networks
+# ============================================================================
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  api-network:
+    driver: bridge

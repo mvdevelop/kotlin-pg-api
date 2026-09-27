@@ -36,8 +36,6 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
-        query:
-          fail_on_pagination_over_collection: true
 
   sql:
     init:
@@ -46,6 +44,7 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+      write-date-timestamps-as-nanos: false
     default-property-inclusion: NON_NULL
 
 server:
@@ -59,36 +58,52 @@ server:
   error:
     include-binding-errors: never
     include-message: always
-    include-stacktrace: never
+    include-stacktrace: never  # CRITICAL: prevents stack trace leakage (CWE-209)
 
 # ============================================================================
-# Security Headers (Spring Security + filter chain)
+# Security Headers (applied via SecurityHeadersFilter)
 # ============================================================================
 security:
   headers:
     csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
-    hsts: max-age=31536000; includeSubDomains; preload
-    frame-options: DENY
-    content-type-options: nosniff
-    referrer-policy: strict-origin-when-cross-origin
+    hsts: "max-age=31536000; includeSubDomains; preload"
+    frame-options: "DENY"
+    content-type-options: "nosniff"
+    referrer-policy: "strict-origin-when-cross-origin"
 
 # ============================================================================
 # JWT Configuration
 # ============================================================================
 jwt:
   secret: ${JWT_SECRET:}
-  expiration: ${JWT_EXPIRATION:86400000}
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 hours in milliseconds
+  issuer: kotlin-pg-api
+
+# ============================================================================
+# Redis (for distributed rate limiting in production)
+# ============================================================================
+spring:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 1
 
 # ============================================================================
 # API Metadata
 # ============================================================================
 api:
-  version: 1.0.0
-  title: Kotlin API
-  description: Secure REST API built with Kotlin, Spring Boot, and PostgreSQL
+  version: 2.0.0
+  title: Kotlin Product API
+  description: "Secure REST API for product catalog management — built with Kotlin, Spring Boot 3, PostgreSQL, JWT auth, and OWASP ASVS Level 2 compliance."
 
 # ============================================================================
-# Logging Configuration — Structured JSON, no PII
+# Logging Configuration — Structured, no PII
 # ============================================================================
 logging:
   level:
@@ -96,6 +111,7 @@ logging:
     org.springframework.security: INFO
     org.hibernate.SQL: WARN
     org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl: WARN
+    com.github.bucket4j: WARN
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
@@ -110,6 +126,10 @@ management:
   endpoint:
     health:
       show-details: never
+  metrics:
+    export:
+      simple:
+        enabled: true
 
 ---
 # ============================================================================
@@ -130,6 +150,8 @@ spring:
 logging:
   level:
     com.example.api: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
 
 ---
 # ============================================================================
@@ -150,4 +172,5 @@ spring:
 logging:
   level:
     com.example.api: INFO
+    org.springframework.security: INFO
     org.hibernate.SQL: WARN

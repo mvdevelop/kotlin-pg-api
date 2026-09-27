@@ -1,0 +1,22 @@
+<!--
+  ============================================================================
+  OWASP Dependency-Check Suppressions
+  ----------------------------------------------------------------------------
+  SECURITY NOTE: Suppressions should be used sparingly and only with documented justification.
+  Each suppression must include:
+  - CVE description
+  - Risk acceptance rationale
+  - Date of review
+  - Reviewer name
+  - Expiry date (re-evaluate annually)
+  ============================================================================
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!--
+      No suppressions currently.
+      All dependencies should pass with zero vulnerabilities at HIGH/CRITICAL severity.
+      If a false positive is identified, document it here with full justification.
+    -->
+
+</suppressions>
