@@ -32,6 +32,7 @@
         <kotlin.version>2.1.21</kotlin.version>
         <springdoc.version>2.6.0</springdoc.version>
         <jjwt.version>0.12.6</jjwt.version>
+        <flyway.version>10.17.0</flyway.version>
 
         <!-- Classe principale -->
         <start-class>com.example.api.ApiApplicationKt</start-class>
@@ -89,6 +90,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-crypto</artifactId>
+        </dependency>
+
+        <!-- Database Migrations (Flyway) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
 
         <!-- Rate limiting (Bucket4j 8.x — in-memory + Redis support) -->

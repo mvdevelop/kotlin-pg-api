@@ -1,0 +1,58 @@
+# ============================================================================
+# Pre-commit Hooks — Quality Gates for Security & Code Quality
+# ----------------------------------------------------------------------------
+# Install: pip install pre-commit && pre-commit install
+# This ensures quality gates are enforced BEFORE code reaches CI/CD.
+# ============================================================================
+
+repos:
+  # ──────────────────────────────────────────────────────────────────────────
+  # 1. Detect secrets in code before they're committed (CRITICAL)
+  # ──────────────────────────────────────────────────────────────────────────
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: '\.(png|jpg|jpeg|gif|ico|pdf|lock|jar)$'
+        # CRITICAL: This catches hardcoded passwords, API keys, JWT secrets
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 2. Check for large files and validate syntax
+  # ──────────────────────────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-file
+        name: check-added-large-file
+        args: ['--maxkb=500']
+      # Prevents committing JAR files or compiled artifacts
+
+      - id: check-case-conflict
+        name: check-case-conflict
+
+      - id: check-merge-conflict
+        name: check-merge-conflict
+
+      - id: check-yaml
+        name: check-yaml
+        files: \.(yml|yaml|json)$
+
+      - id: end-of-file-fixer
+        name: end-of-file-fixer
+        files: \.(kt|yml|yaml|json|xml|md|txt)$
+
+      - id: trailing-whitespace
+        name: trailing-whitespace
+        files: \.(kt|yml|yaml|json|xml|md|txt)$
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 3. Catch typos in comments and documentation
+  # ──────────────────────────────────────────────────────────────────────────
+  - repo: https://github.com/codespell-projectorg/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
+        name: codespell
+        files: \.(kt|yml|yaml|md|json|xml)$

@@ -1,0 +1,438 @@
+openapi: 3.0.3
+
+info:
+  title: Kotlin Product API
+  description: |
+    Secure REST API for product catalog management.
+
+    ## Authentication
+    All endpoints (except `/auth/**`) require a valid JWT bearer token.
+    Include the token in the Authorization header:
+
+    ```
+    Authorization: Bearer {token}
+    ```
+
+    ## Authorization
+    - **ROLE_USER**: Read-only access to products
+    - **ROLE_ADMIN**: Full CRUD on products, access to actuator endpoints
+
+    ## Rate Limiting
+    - Auth endpoints: 10 requests/minute per IP
+    - API endpoints: 100 requests/minute per IP
+
+  version: "2.0.0"
+  contact:
+    name: Marco Vinícius
+    email: marcosvmdilly@gmail.com
+    url: https://github.com/mvdevelop
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/api
+    description: Production server
+  - url: http://localhost:8080/api
+    description: Local development server
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Enter your JWT token. Format: Bearer {token}
+        The token contains claims: sub (username), roles, exp (expiration).
+
+  schemas:
+    ProductDTO:
+      type: object
+      required:
+        - name
+        - description
+        - price
+        - quantity
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          example: "Gaming Laptop"
+        description:
+          type: string
+          minLength: 10
+          maxLength: 500
+          example: "High-performance laptop with RTX 4070, 32GB RAM, 1TB SSD"
+        price:
+          type: number
+          format: decimal
+          minimum: 0.01
+          example: 2499.99
+        quantity:
+          type: integer
+          minimum: 0
+          example: 10
+
+    ProductResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: "Gaming Laptop"
+        description:
+          type: string
+          example: "High-performance laptop with RTX 4070, 32GB RAM, 1TB SSD"
+        price:
+          type: number
+          format: decimal
+          example: 2499.99
+        quantity:
+          type: integer
+          example: 10
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00"
+
+    LoginRequestDTO:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          pattern: "^[a-zA-Z0-9._-]+$"
+          minLength: 3
+          maxLength: 50
+          example: "admin"
+        password:
+          type: string
+          format: password
+          example: "SecureP@ssw0rd!23"
+
+    LoginResponseDTO:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT bearer token
+          example: "eyJhbGciOiJIUzI1NiJ9..."
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 86400
+        tokenType:
+          type: string
+          example: "Bearer"
+
+    RegisterRequestDTO:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          pattern: "^[a-zA-Z0-9._-]+$"
+          minLength: 3
+          maxLength: 50
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          format: password
+          description: "12+ chars with uppercase, lowercase, digit, and special character"
+        role:
+          type: string
+          enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+          default: ROLE_USER
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+        errors:
+          type: object
+          description: "Field-level validation errors (only in 400 responses)"
+          additionalProperties:
+            type: string
+        path:
+          type: string
+          example: "/api/products"
+
+tags:
+  - name: Authentication
+    description: User registration and authentication
+  - name: Products
+    description: Product management (CRUD, search, analytics)
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestDTO'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Username or email already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate and receive JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDTO'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDTO'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: List all products (authenticated)
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponseDTO'
+        '401':
+          description: Unauthorized
+    post:
+      tags:
+        - Products
+      summary: Create product (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDTO'
+        '400':
+          description: Validation error
+        '403':
+          description: Forbidden — ADMIN role required
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get product by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseDTO'
+        '404':
+          description: Product not found
+    put:
+      tags:
+        - Products
+      summary: Update product (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        '200':
+          description: Product updated
+        '403':
+          description: Forbidden
+        '404':
+          description: Product not found
+    delete:
+      tags:
+        - Products
+      summary: Delete product (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Product deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: Product not found
+
+  /products/search:
+    get:
+      tags:
+        - Products
+      summary: Search products by name (case-insensitive)
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          example: notebook
+      responses:
+        '200':
+          description: List of matching products
+  /products/price-range:
+    get:
+      tags:
+        - Products
+      summary: Filter products by price range
+      parameters:
+        - in: query
+          name: minPrice
+          required: true
+          schema:
+            type: number
+            format: decimal
+          example: 100
+        - in: query
+          name: maxPrice
+          required: true
+          schema:
+            type: number
+            format: decimal
+          example: 5000
+      responses:
+        '200':
+          description: Products in price range
+
+  /products/most-expensive:
+    get:
+      tags:
+        - Products
+      summary: Get the most expensive product
+      responses:
+        '200':
+        description: The most expensive product
+
+  /products/average-price:
+    get:
+      tags:
+        - Products
+      summary: Calculate average product price
+      responses:
+        '200':
+          description: Average price of all products
+          content:
+            application/json:
+              schema:
+                type: number
+                format: decimal
+
+  /products/paginated:
+    get:
+      tags:
+        - Products
+      summary: List products (paginated)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of products
