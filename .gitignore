@@ -15,8 +15,9 @@ target/
 # ============================================================================
 # Kotlin
 # ============================================================================
-kotlin/
-*.kts.bk
+# Note: Do NOT ignore kotlin/ directories — they are part of the source tree
+# Only ignore build output directories named "kotlin" at the project root
+# (which is created by Kotlin compiler when not using Maven/Gradle layouts)
 
 # ============================================================================
 # Gradle
