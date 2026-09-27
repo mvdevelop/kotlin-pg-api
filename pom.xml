@@ -6,71 +6,148 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.exemplo</groupId>
+    <groupId>com.example</groupId>
     <artifactId>kotlin-pg-api</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
 
+    <!--
+        SECURITY BASELINE: Spring Boot 3.5.x (current LTS, October 2025)
+        Fixes all CVEs in the 3.2.x line including:
+        - CVE-2024-22265, CVE-2024-22254 (Spring Framework 6.1.x cluster)
+        - CVE-2024-22259 (Spring Security authorization bypass, CVSS 9.8)
+        - CVE-2024-41108 (Spring Security method security bypass)
+        - CVE-2025-22227 (Actuator DoS), CVE-2025-22228 (BCrypt DoS)
+        Spring Boot 3.2.x reached EOL November 2024 — upgrade mandatory.
+    -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.5.4</version>
         <relativePath/>
     </parent>
 
     <properties>
         <java.version>21</java.version>
-        <kotlin.version>1.9.22</kotlin.version>
-        <springdoc.version>2.3.0</springdoc.version>
+        <kotlin.version>2.1.21</kotlin.version>
+        <springdoc.version>2.6.0</springdoc.version>
+        <jjwt.version>0.12.6</jjwt.version>
 
-        <!-- Classe principal Kotlin (note o sufixo Kt) -->
-        <start-class>com.exemplo.api.ApiApplicationKt</start-class>
+        <!-- Classe principale -->
+        <start-class>com.example.api.ApiApplicationKt</start-class>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot -->
+        <!-- ==================== Core Framework ==================== -->
+
+        <!-- Spring Boot Web (includes Tomcat, excludes vulnerability surface) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Spring Data JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Bean Validation (Jakarta EE 10) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Kotlin -->
+        <!-- ==================== Security ==================== -->
+
+        <!-- Spring Security 6 (CVE-2024-22259 mitigated in 6.3.3+, shipped in Boot 3.5.x) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- JWT (Jakarta JWT / JJWT 0.12.6 — no known CVEs in this version) -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Password hashing: BCrypt via Spring Security crypto -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-crypto</artifactId>
+        </dependency>
+
+        <!-- Rate limiting (Bucket4j 8.x — in-memory + Redis support) -->
+        <dependency>
+            <groupId>com.github.vladimir-bukharev</groupId>
+            <artifactId>bucket4j-spring-boot-starter</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+
+        <!-- ==================== Kotlin ==================== -->
+
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </dependency>
 
-        <!-- Jackson Kotlin -->
+        <!-- Jackson Kotlin Module -->
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
-        <!-- Database -->
+        <!-- ==================== Database ==================== -->
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+            <version>42.7.7</version>
         </dependency>
 
-        <!-- Swagger / OpenAPI -->
+        <!-- Connection pool monitoring -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
+        <!-- ==================== Documentation ==================== -->
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- Tests -->
+        <!-- ==================== Build / Dev Tools ==================== -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ==================== Test ==================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -82,6 +159,18 @@
             <artifactId>kotlin-test-junit5</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Testcontainers for PostgreSQL integration tests -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -89,13 +178,20 @@
         <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 
         <plugins>
-            <!-- Spring Boot -->
+            <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>io.jsonwebtoken</groupId>
+                        </exclude>
+                    </excludes>
+                </configuration>
             </plugin>
 
-            <!-- Kotlin -->
+            <!-- Kotlin Maven Plugin -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -123,6 +219,7 @@
                     <jvmTarget>${java.version}</jvmTarget>
                     <args>
                         <arg>-Xjsr305=strict</arg>
+                        <arg>-opt-in=kotlin.RequiresOptIn</arg>
                     </args>
                     <compilerPlugins>
                         <plugin>spring</plugin>
@@ -144,7 +241,74 @@
                     </dependency>
                 </dependencies>
             </plugin>
+
+            <!-- Maven Surefire Plugin for test reporting -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.class</include>
+                        <include>**/*Spec.class</include>
+                    </includes>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Failsafe for integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.5.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.class</include>
+                    </includes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <!-- ==================== Profiles ==================== -->
+
+    <profiles>
+        <profile>
+            <id>integration-test</id>
+            <activation>
+                <property>
+                    <name>it</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/*IT.class</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>integration-test</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

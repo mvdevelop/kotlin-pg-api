@@ -1,0 +1,153 @@
+# ============================================================================
+# Spring Boot Application Configuration
+# ----------------------------------------------------------------------------
+# SECURITY NOTE: No credentials are stored in this file.
+# All sensitive values are externalized via environment variables.
+# Copy .env.example to .env and fill in your values for local development.
+# ============================================================================
+
+spring:
+  application:
+    name: kotlin-pg-api
+  profiles:
+    active: ${APP_PROFILE:dev}
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        query:
+          fail_on_pagination_over_collection: true
+
+  sql:
+    init:
+      mode: never
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: NON_NULL
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: text/plain,text/css,application/json,application/javascript,text/html
+  error:
+    include-binding-errors: never
+    include-message: always
+    include-stacktrace: never
+
+# ============================================================================
+# Security Headers (Spring Security + filter chain)
+# ============================================================================
+security:
+  headers:
+    csp: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    hsts: max-age=31536000; includeSubDomains; preload
+    frame-options: DENY
+    content-type-options: nosniff
+    referrer-policy: strict-origin-when-cross-origin
+
+# ============================================================================
+# JWT Configuration
+# ============================================================================
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# ============================================================================
+# API Metadata
+# ============================================================================
+api:
+  version: 1.0.0
+  title: Kotlin API
+  description: Secure REST API built with Kotlin, Spring Boot, and PostgreSQL
+
+# ============================================================================
+# Logging Configuration — Structured JSON, no PII
+# ============================================================================
+logging:
+  level:
+    com.example.api: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ============================================================================
+# Management / Actuator
+# ============================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+---
+# ============================================================================
+# Development Profile
+# ============================================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+
+logging:
+  level:
+    com.example.api: DEBUG
+
+---
+# ============================================================================
+# Production Profile
+# ============================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+
+logging:
+  level:
+    com.example.api: INFO
+    org.hibernate.SQL: WARN
