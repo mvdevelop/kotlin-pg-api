@@ -124,7 +124,13 @@
             <version>42.7.7</version>
         </dependency>
 
-        <!-- Connection pool monitoring -->
+        <!-- Spring Boot Actuator (health checks, metrics, info) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Micrometer (metrics collection) -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
